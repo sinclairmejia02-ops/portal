@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoImport HN | Vehículos Premium de USA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #0a2342; /* Navy Automotriz */
+            --secondary: #1e3a8a;
+            --accent: #e11d48; /* Rojo para acentos/ofertas */
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.6; overflow-x: hidden; }
+        
+        /* --- NAVEGACIÓN --- */
+        nav {
+            position: fixed; top: 0; width: 100%; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px); z-index: 1000; border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center; padding: 1rem 5%;
+        }
+        .logo { font-family: 'Oswald', sans-serif; font-size: 1.5rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { text-decoration: none; color: var(--text-main); font-weight: 500; transition: var(--transition); font-size: 0.9rem; }
+        .nav-links a:hover { color: var(--secondary); }
+        .cart-icon-wrapper { position: relative; cursor: pointer; }
+        #cart-count { 
+            position: absolute; top: -8px; right: -8px; background: var(--accent); color: white;
+            font-size: 0.7rem; padding: 2px 6px; border-radius: 50%; font-weight: bold;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 90vh; background: linear-gradient(rgba(10,35,66,0.8), rgba(10,35,66,0.6)), 
+            url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1920');
+            background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center;
+            text-align: center; color: white; padding: 0 5%; margin-top: 60px;
+        }
+        .hero-content h1 { font-family: 'Oswald', sans-serif; font-size: 3.5rem; margin-bottom: 1.5rem; text-transform: uppercase; }
+        .hero-content p { font-size: 1.2rem; margin-bottom: 2rem; max-width: 700px; margin-inline: auto; opacity: 0.9; }
+        .btn { 
+            padding: 12px 30px; border-radius: 5px; border: none; font-weight: 600; cursor: pointer; 
+            transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: #be123c; transform: translateY(-2px); }
+
+        /* --- SECCIONES GENERALES --- */
+        section { padding: 5rem 10%; }
+        .section-title { text-align: center; margin-bottom: 3rem; }
+        .section-title h2 { font-family: 'Oswald', sans-serif; font-size: 2.2rem; color: var(--primary); }
+        .section-title p { color: var(--text-muted); }
+
+        /* --- GRID DE VEHÍCULOS --- */
+        .filters { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; justify-content: center; }
+        .search-input { padding: 10px 15px; border: 1px solid #ddd; border-radius: 5px; min-width: 250px; }
+
+        .cars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; }
+        .car-card { 
+            background: var(--white); border-radius: 12px; overflow: hidden; shadow: var(--shadow); 
+            transition: var(--transition); border: 1px solid #f1f5f9; position: relative;
+        }
+        .car-card:hover { transform: translateY(-10px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .car-img { width: 100%; height: 200px; object-fit: cover; }
+        .car-info { padding: 1.5rem; }
+        .badge { 
+            position: absolute; top: 1rem; left: 1rem; background: var(--secondary); color: white;
+            padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;
+        }
+        .car-price { font-size: 1.4rem; font-weight: 700; color: var(--primary); margin: 0.5rem 0; }
+        .car-meta { display: flex; gap: 10px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        
+        /* --- CARRITO (MODAL) --- */
+        .cart-modal {
+            position: fixed; top: 0; right: -100%; width: 400px; height: 100vh; background: white;
+            z-index: 2000; transition: 0.4s; padding: 2rem; box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+        }
+        .cart-modal.active { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .cart-items { flex-grow: 1; overflow-y: auto; }
+        .cart-item { display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+        .cart-item img { width: 70px; height: 50px; border-radius: 4px; object-fit: cover; }
+        .cart-footer { padding-top: 1rem; border-top: 2px solid #eee; }
+
+        /* --- TESTIMONIOS Y PROCESO --- */
+        .process-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; text-align: center; }
+        .process-item i { font-size: 2.5rem; color: var(--secondary); margin-bottom: 1rem; }
+
+        /* --- CONTACTO --- */
+        .contact-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 6px; }
+
+        /* --- WHATSAPP FLOATING --- */
+        .float-wa { 
+            position: fixed; bottom: 2rem; right: 2rem; background: #25d366; color: white;
+            width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 999; text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero-content h1 { font-size: 2.2rem; }
+            .contact-container, .process-grid { grid-template-columns: 1fr; }
+            .cart-modal { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">AutoImport <span style="color:var(--accent)">HN</span></div>
+        <ul class="nav-links">
+            <li><a href="#home">Inicio</a></li>
+            <li><a href="#catalogo">Catálogo</a></li>
+            <li><a href="#nosotros">Nosotros</a></li>
+            <li><a href="#contacto">Contacto</a></li>
+        </ul>
+        <div class="cart-icon-wrapper" onclick="toggleCart()">
+            <i data-lucide="shopping-cart"></i>
+            <span id="cart-count">0</span>
+        </div>
+    </nav>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Importamos el auto de tus sueños</h1>
+            <p>Especialistas en vehículos certificados de Estados Unidos. Calidad, transparencia y los mejores precios del mercado en Honduras.</p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="#catalogo" class="btn btn-primary">Ver Catálogo <i data-lucide="chevron-right"></i></a>
+                <a href="#contacto" class="btn" style="background: white; color: var(--primary);">Contáctanos</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="nosotros">
+        <div class="section-title">
+            <h2>¿Por qué elegirnos?</h2>
+            <p>Tu seguridad es nuestra prioridad en cada importación.</p>
+        </div>
+        <div class="process-grid">
+            <div class="process-item">
+                <i data-lucide="shield-check"></i>
+                <h3>Garantía Real</h3>
+                <p>Inspección mecánica completa antes de salir de USA.</p>
+            </div>
+            <div class="process-item">
+                <i data-lucide="file-text"></i>
+                <h3>Historial Limpio</h3>
+                <p>Entregamos reporte Carfax en todas nuestras unidades.</p>
+            </div>
+            <div class="process-item">
+                <i data-lucide="truck"></i>
+                <h3>Logística Ágil</h3>
+                <p>Trámites aduanales y transporte puerta a puerta en HN.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="catalogo" style="background: #f1f5f9;">
+        <div class="section-title">
+            <h2>Inventario Disponible</h2>
+            <p>Explora nuestras unidades seleccionadas.</p>
+        </div>
+        
+        <div class="filters">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por marca o modelo..." onkeyup="filterCars()">
+            <select class="search-input" id="filterYear" onchange="filterCars()">
+                <option value="">Cualquier Año</option>
+                <option value="2023">2023</option>
+                <option value="2022">2022</option>
+                <option value="2021">2021</option>
+            </select>
+        </div>
+
+        <div class="cars-grid" id="cars-container">
+            </div>
+    </section>
+
+    <section id="contacto">
+        <div class="section-title">
+            <h2>Contáctanos</h2>
+            <p>Estamos listos para asesorarte hoy mismo.</p>
+        </div>
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>Información de Contacto</h3>
+                <br>
+                <p><i data-lucide="map-pin" style="display:inline; width: 18px;"></i> San Pedro Sula, Honduras</p>
+                <p><i data-lucide="phone" style="display:inline; width: 18px;"></i> +504 8990-0088</p>
+                <p><i data-lucide="mail" style="display:inline; width: 18px;"></i> ventas@autoimporthn.com</p>
+                <br>
+                <a href="https://wa.me/50489900088" target="_blank" class="btn" style="background: #25d366; color: white;">
+                    Chatea por WhatsApp
+                </a>
+            </div>
+            <form id="contactForm">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" placeholder="Tu nombre..." required>
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" placeholder="correo@ejemplo.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Mensaje</label>
+                    <textarea rows="4" placeholder="¿En qué vehículo estás interesado?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Mensaje</button>
+            </form>
+        </div>
+    </section>
+
+    <footer style="background: var(--primary); color: white; padding: 3rem 10%; text-align: center;">
+        <p>&copy; 2024 AutoImport HN - Todos los derechos reservados.</p>
+    </footer>
+
+    <div class="cart-modal" id="cart-modal">
+        <div class="cart-header">
+            <h3>Tu Cotización</h3>
+            <button onclick="toggleCart()" style="border:none; background:none; cursor:pointer;"><i data-lucide="x"></i></button>
+        </div>
+        <div class="cart-items" id="cart-items-container">
+            </div>
+        <div class="cart-footer">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; font-weight: bold;">
+                <span>Total Referencial:</span>
+                <span id="cart-total">L. 0.00</span>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="checkoutWhatsApp()">
+                Finalizar pedido vía WhatsApp <i data-lucide="send"></i>
+            </button>
+        </div>
+    </div>
+
+    <a href="https://wa.me/50489900088" class="float-wa" target="_blank">
+        <i data-lucide="message-circle"></i>
+    </a>
+
+    <script>
+        // DATOS DE VEHÍCULOS (Simulando base de datos)
+        const cars = [
+            { id: 'v1', brand: 'Toyota', model: 'RAV4 Hybrid', year: 2022, price: 780000, img: 'https://images.unsplash.com/photo-1621111830778-958f278912aa?auto=format&fit=crop&q=80&w=800', status: 'Disponible' },
+            { id: 'v2', brand: 'Honda', model: 'Civic Sport', year: 2021, price: 545000, img: 'https://images.unsplash.com/photo-1606148383204-783a48e89f89?auto=format&fit=crop&q=80&w=800', status: 'Importado' },
+            { id: 'v3', brand: 'Ford', model: 'F-150 Lariat', year: 2023, price: 1250000, img: 'https://images.unsplash.com/photo-1591768793355-74d7c869c3b7?auto=format&fit=crop&q=80&w=800', status: 'Disponible' },
+            { id: 'v4', brand: 'Mazda', model: 'CX-5', year: 2022, price: 620000, img: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800', status: 'Disponible' },
+            { id: 'v5', brand: 'Hyundai', model: 'Elantra', year: 2022, price: 480000, img: 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800', status: 'Importado' },
+            { id: 'v6', brand: 'Jeep', model: 'Wrangler Unlimited', year: 2021, price: 950000, img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800', status: 'Disponible' }
+        ];
+
+        let cart = JSON.parse(localStorage.getItem('auto_cart')) || [];
+
+        // RENDERIZAR CARROS
+        function renderCars(data = cars) {
+            const container = document.getElementById('cars-container');
+            container.innerHTML = data.map(car => `
+                <div class="car-card">
+                    <span class="badge">${car.status}</span>
+                    <img src="${car.img}" alt="${car.model}" class="car-img">
+                    <div class="car-info">
+                        <h3>${car.brand} ${car.model}</h3>
+                        <div class="car-meta">
+                            <span>Año: ${car.year}</span> | <span>USA Import</span>
+                        </div>
+                        <p class="car-price">L. ${car.price.toLocaleString()}</p>
+                        <button class="btn btn-primary" onclick="addToCart('${car.id}')" style="width: 100%; justify-content: center;">
+                            Agregar a Interés
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // FILTROS
+        function filterCars() {
+            const text = document.getElementById('searchInput').value.toLowerCase();
+            const year = document.getElementById('filterYear').value;
+            
+            const filtered = cars.filter(car => {
+                const matchesText = car.brand.toLowerCase().includes(text) || car.model.toLowerCase().includes(text);
+                const matchesYear = year === "" || car.year.toString() === year;
+                return matchesText && matchesYear;
+            });
+            renderCars(filtered);
+        }
+
+        // LÓGICA DE CARRITO
+        function toggleCart() {
+            document.getElementById('cart-modal').classList.toggle('active');
+        }
+
+        function addToCart(id) {
+            const car = cars.find(c => c.id === id);
+            if (!cart.find(item => item.id === id)) {
+                cart.push(car);
+                updateCart();
+            }
+            toggleCart();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateCart();
+        }
+
+        function updateCart() {
+            localStorage.setItem('auto_cart', JSON.stringify(cart));
+            document.getElementById('cart-count').innerText = cart.length;
+            
+            const container = document.getElementById('cart-items-container');
+            let total = 0;
+            
+            container.innerHTML = cart.map(item => {
+                total += item.price;
+                return `
+                    <div class="cart-item">
+                        <img src="${item.img}" alt="${item.model}">
+                        <div style="flex-grow:1">
+                            <h4 style="font-size:0.9rem">${item.brand} ${item.model}</h4>
+                            <p style="font-size:0.8rem; color:var(--text-muted)">Año: ${item.year}</p>
+                            <p style="font-weight:bold; font-size:0.9rem">L. ${item.price.toLocaleString()}</p>
+                        </div>
+                        <button onclick="removeFromCart('${item.id}')" style="background:none; border:none; color:var(--accent); cursor:pointer">
+                            <i data-lucide="trash-2" style="width:18px"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('cart-total').innerText = `L. ${total.toLocaleString()}`;
+            lucide.createIcons();
+        }
+
+        // CHECKOUT WHATSAPP
+        function checkoutWhatsApp() {
+            if (cart.length === 0) return alert("Tu carrito está vacío.");
+
+            const phone = "50489900088";
+            let total = 0;
+            let carList = "";
+
+            cart.forEach((item, index) => {
+                total += item.price;
+                carList += `${index + 1}. ${item.brand} ${item.model} (${item.year}) - L. ${item.price.toLocaleString()}\n`;
+            });
+
+            const message = `Hola 😊 Me interesa cotizar y conocer disponibilidad de estos vehículos que vi en su web:\n\n${carList}\nTotal Referencial: L. ${total.toLocaleString()}\n\n¿Me confirman si están disponibles y cuáles serían los próximos pasos para una visita? Saludos.`;
+            
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCars();
+            updateCart();
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
