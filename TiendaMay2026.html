@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="es" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoImport HN - Vehículos Importados desde EE.UU.</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['DM Sans', 'sans-serif'] },
+      colors: {
+        navy: '#0f172a',
+        steel: '#1e293b',
+        accent: '#f59e0b',
+        surface: '#f8fafc'
+      }
+    }
+  }
+}
+</script>
+  <style>
+html, body { height: 100%; margin: 0; font-family: 'DM Sans', sans-serif; }
+.app-wrapper { height: 100%; overflow-y: auto; overflow-x: hidden; }
+.fade-in { animation: fadeIn 0.6s ease forwards; opacity: 0; }
+@keyframes fadeIn { to { opacity: 1; } }
+.slide-up { animation: slideUp 0.5s ease forwards; opacity: 0; transform: translateY(20px); }
+@keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+.card-hover { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+.btn-pulse:active { transform: scale(0.95); }
+.nav-link { position: relative; }
+.nav-link::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 0; height: 2px; background: #f59e0b; transition: width 0.3s; }
+.nav-link:hover::after { width: 100%; }
+.badge { animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+section { scroll-margin-top: 80px; }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-surface text-navy">
+  <div class="app-wrapper" id="app">
+   <!-- Modal Detalle Vehículo -->
+   <div id="vehicle-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in">
+     <div class="sticky top-0 flex items-center justify-between p-6 border-b bg-white">
+      <h2 id="modal-title" class="text-2xl font-bold text-navy">Detalles del Vehículo</h2><button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg transition"><i data-lucide="x" class="w-6 h-6"></i></button>
+     </div>
+     <div class="p-6 space-y-6"><img id="modal-foto" src="" alt="" class="w-full h-80 object-cover rounded-xl" loading="lazy" onerror="this.style.background='#e5e7eb';this.alt='Imagen no disponible';">
+      <div class="grid md:grid-cols-2 gap-6">
+       <div class="space-y-4">
+        <div class="bg-surface p-4 rounded-xl">
+         <p class="text-sm text-gray-600">Marca</p>
+         <p id="modal-marca" class="text-xl font-bold text-navy">-</p>
+        </div>
+        <div class="bg-surface p-4 rounded-xl">
+         <p class="text-sm text-gray-600">Modelo</p>
+         <p id="modal-modelo" class="text-xl font-bold text-navy">-</p>
+        </div>
+        <div class="bg-surface p-4 rounded-xl">
+         <p class="text-sm text-gray-600">Año</p>
+         <p id="modal-year" class="text-xl font-bold text-navy">-</p>
+        </div>
+       </div>
+       <div class="space-y-4">
+        <div class="bg-surface p-4 rounded-xl">
+         <p class="text-sm text-gray-600">Motor</p>
+         <p id="modal-motor" class="text-xl font-bold text-navy">-</p>
+        </div>
+        <div class="bg-accent/10 p-4 rounded-xl border-2 border-accent">
+         <p class="text-sm text-gray-600">Precio</p>
+         <p id="modal-precio" class="text-2xl font-bold text-accent">-</p>
+        </div>
+        <div class="bg-green-50 p-4 rounded-xl border-2 border-green-200">
+         <p class="text-sm text-gray-600">Estado</p>
+         <p class="text-xl font-bold text-green-600">✓ Disponible</p>
+        </div>
+       </div>
+      </div>
+      <div class="bg-surface p-6 rounded-xl space-y-3">
+       <h3 class="font-bold text-lg text-navy">Descripción</h3>
+       <p id="modal-descripcion" class="text-gray-700 text-sm leading-relaxed">Vehículo importado directamente desde Estados Unidos, sometido a inspección rigurosa y documentación completa. Listo para entrega con trámites legales finalizados.</p>
+      </div>
+      <div class="bg-navy/5 p-6 rounded-xl space-y-3">
+       <h3 class="font-bold text-lg text-navy">Garantías</h3>
+       <ul class="space-y-2 text-sm text-gray-700">
+        <li class="flex gap-2 items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-600 shrink-0 mt-0.5"></i><span>Documentación completa y verificada</span></li>
+        <li class="flex gap-2 items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-600 shrink-0 mt-0.5"></i><span>Historial de accidentes verificado</span></li>
+        <li class="flex gap-2 items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-600 shrink-0 mt-0.5"></i><span>Proceso legal 100% transparente</span></li>
+        <li class="flex gap-2 items-start"><i data-lucide="check-circle-2" class="w-5 h-5 text-green-600 shrink-0 mt-0.5"></i><span>Soporte postventa disponible</span></li>
+       </ul>
+      </div>
+      <div class="space-y-3"><button id="modal-add-cart" class="w-full bg-navy hover:bg-steel text-white font-bold py-4 rounded-xl transition btn-pulse flex items-center justify-center gap-2"><i data-lucide="shopping-cart" class="w-5 h-5"></i> Agregar al Carrito</button> <button id="modal-whatsapp" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition btn-pulse flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24">
+         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.6-1.47A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.156 0-4.154-.694-5.784-1.87l-.413-.248-2.727.871.887-2.64-.272-.43A9.71 9.71 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z" />
+        </svg> Consultar por WhatsApp </button>
+      </div>
+     </div>
+    </div>
+   </div><!-- Navbar -->
+   <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+     <a href="#home" class="text-xl font-800 text-navy flex items-center gap-2"> <span class="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-white text-sm font-bold">A</span> <span id="nav-brand">AutoImport HN</span> </a> <button id="mobile-toggle" class="md:hidden p-2"><i data-lucide="menu" class="w-6 h-6"></i></button>
+     <div id="nav-menu" class="hidden md:flex items-center gap-6 text-sm font-medium">
+      <a href="#home" class="nav-link text-gray-700 hover:text-navy">Inicio</a> <a href="#nosotros" class="nav-link text-gray-700 hover:text-navy">Nosotros</a> <a href="#catalogo" class="nav-link text-gray-700 hover:text-navy">Catálogo</a> <a href="#contacto" class="nav-link text-gray-700 hover:text-navy">Contacto</a> <a href="#carrito" class="relative nav-link text-gray-700 hover:text-navy flex items-center gap-1"> <i data-lucide="shopping-cart" class="w-5 h-5"></i> <span id="cart-count" class="absolute -top-2 -right-3 bg-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold hidden">0</span> </a>
+     </div>
+    </div>
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t px-4 py-3 space-y-3">
+     <a href="#home" class="block text-gray-700 font-medium">Inicio</a> <a href="#nosotros" class="block text-gray-700 font-medium">Nosotros</a> <a href="#catalogo" class="block text-gray-700 font-medium">Catálogo</a> <a href="#contacto" class="block text-gray-700 font-medium">Contacto</a> <a href="#carrito" class="block text-gray-700 font-medium">🛒 Carrito (<span id="cart-count-mobile">0</span>)</a>
+    </div>
+   </nav><!-- Hero -->
+   <section id="home" class="pt-24 pb-16 px-4 bg-gradient-to-br from-navy via-steel to-navy text-white relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, #f59e0b 0%, transparent 50%), radial-gradient(circle at 80% 20%, #3b82f6 0%, transparent 40%);"></div>
+    <div class="max-w-7xl mx-auto relative z-10 text-center py-16 md:py-24">
+     <h1 id="hero-title" class="text-4xl md:text-6xl font-800 mb-4 fade-in">Vehículos Importados desde EE.UU.</h1>
+     <p id="hero-subtitle" class="text-lg md:text-xl text-gray-300 mb-8 fade-in" style="animation-delay:0.2s">Calidad, confianza y los mejores precios en Honduras</p><a href="#catalogo" class="inline-block bg-accent hover:bg-amber-600 text-white font-bold px-8 py-4 rounded-xl transition-all btn-pulse fade-in" style="animation-delay:0.4s">Ver Catálogo →</a>
+     <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 text-center fade-in" style="animation-delay:0.6s">
+      <div>
+       <p class="text-2xl font-bold text-accent">100+</p>
+       <p class="text-sm text-gray-400">Vehículos vendidos</p>
+      </div>
+      <div>
+       <p class="text-2xl font-bold text-accent">5★</p>
+       <p class="text-sm text-gray-400">Calificación</p>
+      </div>
+      <div>
+       <p class="text-2xl font-bold text-accent">100%</p>
+       <p class="text-sm text-gray-400">Legal y seguro</p>
+      </div>
+      <div>
+       <p class="text-2xl font-bold text-accent">24/7</p>
+       <p class="text-sm text-gray-400">Atención</p>
+      </div>
+     </div>
+    </div>
+   </section><!-- Benefits -->
+   <section class="py-16 px-4 bg-white">
+    <div class="max-w-6xl mx-auto">
+     <h2 class="text-3xl font-bold text-center mb-12">¿Por qué comprar con nosotros?</h2>
+     <div class="grid md:grid-cols-3 gap-8">
+      <div class="text-center p-6 rounded-2xl bg-surface card-hover">
+       <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="shield-check" class="w-7 h-7 text-accent"></i>
+       </div>
+       <h3 class="font-bold mb-2">Garantía y Transparencia</h3>
+       <p class="text-sm text-gray-600">Documentación completa, historial verificado y proceso 100% legal.</p>
+      </div>
+      <div class="text-center p-6 rounded-2xl bg-surface card-hover">
+       <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="truck" class="w-7 h-7 text-accent"></i>
+       </div>
+       <h3 class="font-bold mb-2">Importación Directa</h3>
+       <p class="text-sm text-gray-600">Traemos tu vehículo desde EE.UU. con seguimiento en tiempo real.</p>
+      </div>
+      <div class="text-center p-6 rounded-2xl bg-surface card-hover">
+       <div class="w-14 h-14 bg-accent/10 rounded-xl flex items-center justify-center mx-auto mb-4"><i data-lucide="badge-dollar-sign" class="w-7 h-7 text-accent"></i>
+       </div>
+       <h3 class="font-bold mb-2">Mejores Precios</h3>
+       <p class="text-sm text-gray-600">Eliminamos intermediarios para ofrecerte precios competitivos.</p>
+      </div>
+     </div>
+    </div>
+   </section><!-- Nosotros -->
+   <section id="nosotros" class="py-16 px-4 bg-surface">
+    <div class="max-w-6xl mx-auto">
+     <h2 class="text-3xl font-bold text-center mb-4">Quiénes Somos</h2>
+     <p class="text-center text-gray-600 max-w-2xl mx-auto mb-12">Somos una empresa hondureña dedicada a la importación de vehículos desde Estados Unidos, con años de experiencia facilitando a nuestros clientes el acceso a vehículos de calidad a precios justos.</p>
+     <div class="grid md:grid-cols-2 gap-12 items-center">
+      <div class="space-y-6">
+       <div class="flex gap-4 items-start">
+        <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="search" class="w-5 h-5 text-accent"></i>
+        </div>
+        <div>
+         <h4 class="font-bold">Selección Rigurosa</h4>
+         <p class="text-sm text-gray-600">Inspeccionamos cada vehículo antes de comprarlo en subastas certificadas.</p>
+        </div>
+       </div>
+       <div class="flex gap-4 items-start">
+        <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="file-text" class="w-5 h-5 text-accent"></i>
+        </div>
+        <div>
+         <h4 class="font-bold">Trámites Completos</h4>
+         <p class="text-sm text-gray-600">Nos encargamos de la documentación, nacionalización y entrega.</p>
+        </div>
+       </div>
+       <div class="flex gap-4 items-start">
+        <div class="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center shrink-0"><i data-lucide="heart" class="w-5 h-5 text-accent"></i>
+        </div>
+        <div>
+         <h4 class="font-bold">Postventa</h4>
+         <p class="text-sm text-gray-600">Te acompañamos después de la compra con asesoría y soporte.</p>
+        </div>
+       </div>
+      </div>
+      <div class="space-y-4">
+       <h3 class="font-bold text-lg mb-4">Lo que dicen nuestros clientes</h3>
+       <div class="bg-white p-5 rounded-xl shadow-sm border">
+        <p class="text-sm text-gray-600 italic">"Excelente servicio, mi Tacoma llegó en perfecto estado. Todo transparente y rápido."</p>
+        <p class="text-sm font-bold mt-2">— Carlos M., San Pedro Sula</p>
+       </div>
+       <div class="bg-white p-5 rounded-xl shadow-sm border">
+        <p class="text-sm text-gray-600 italic">"Profesionales de principio a fin. Recomendados al 100%."</p>
+        <p class="text-sm font-bold mt-2">— María L., Tegucigalpa</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Catálogo -->
+   <section id="catalogo" class="py-16 px-4 bg-white">
+    <div class="max-w-7xl mx-auto">
+     <h2 class="text-3xl font-bold text-center mb-4">Catálogo de Vehículos</h2>
+     <p class="text-center text-gray-600 mb-8">Vehículos disponibles para entrega inmediata o por encargo</p><!-- Filters -->
+     <div class="flex flex-wrap gap-3 justify-center mb-10">
+      <select id="filter-marca" class="px-4 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:ring-2 focus:ring-accent/30 outline-none"> <option value="">Todas las marcas</option> <option value="Ford">Ford</option> <option value="Toyota">Toyota</option> <option value="Honda">Honda</option> </select> <select id="filter-year" class="px-4 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:ring-2 focus:ring-accent/30 outline-none"> <option value="">Todos los años</option> <option value="2023">2023</option> <option value="2022">2022</option> <option value="2020">2020</option> <option value="1980">1980</option> </select> <select id="filter-price" class="px-4 py-2 rounded-lg border border-gray-200 text-sm bg-white focus:ring-2 focus:ring-accent/30 outline-none"> <option value="">Cualquier precio</option> <option value="0-400000">Hasta L 400,000</option> <option value="400000-600000">L 400,000 - L 600,000</option> <option value="600000-9999999">Más de L 600,000</option> </select> <button id="filter-reset" class="px-4 py-2 rounded-lg bg-gray-100 text-sm hover:bg-gray-200 transition font-medium">Limpiar</button>
+     </div>
+     <div id="catalog-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+     <p id="no-results" class="hidden text-center text-gray-500 py-12">No se encontraron vehículos con esos filtros.</p>
+     <div class="text-center mt-10">
+      <a href="https://wa.me/50489900088?text=Hola%20%F0%9F%91%8B%20Quisiera%20informaci%C3%B3n%20sobre%20los%20veh%C3%ADculos%20disponibles" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition btn-pulse">
+       <svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.6-1.47A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.156 0-4.154-.694-5.784-1.87l-.413-.248-2.727.871.887-2.64-.272-.43A9.71 9.71 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z" />
+       </svg> Consultar por WhatsApp </a>
+     </div>
+    </div>
+   </section><!-- Carrito -->
+   <section id="carrito" class="py-16 px-4 bg-surface">
+    <div class="max-w-4xl mx-auto">
+     <h2 class="text-3xl font-bold text-center mb-8">🛒 Tu Carrito</h2>
+     <div id="cart-empty" class="text-center py-12 text-gray-500">
+      <i data-lucide="shopping-cart" class="w-16 h-16 mx-auto mb-4 text-gray-300"></i>
+      <p class="text-lg">Tu carrito está vacío</p><a href="#catalogo" class="inline-block mt-4 text-accent font-bold hover:underline">Ver catálogo →</a>
+     </div>
+     <div id="cart-items" class="space-y-4 hidden"></div>
+     <div id="cart-footer" class="hidden mt-8 bg-white rounded-2xl p-6 shadow-sm border">
+      <div class="flex justify-between items-center mb-6">
+       <span class="text-lg font-bold">Total Referencial:</span> <span id="cart-total" class="text-2xl font-800 text-accent">L 0</span>
+      </div><button id="checkout-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl transition btn-pulse flex items-center justify-center gap-3">
+       <svg class="w-6 h-6" fill="currentColor" viewbox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.6-1.47A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.156 0-4.154-.694-5.784-1.87l-.413-.248-2.727.871.887-2.64-.272-.43A9.71 9.71 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z" />
+       </svg> Finalizar Pedido por WhatsApp </button>
+     </div>
+    </div>
+   </section><!-- Contacto -->
+   <section id="contacto" class="py-16 px-4 bg-white">
+    <div class="max-w-4xl mx-auto">
+     <h2 class="text-3xl font-bold text-center mb-8">Contáctanos</h2>
+     <div class="grid md:grid-cols-2 gap-10">
+      <div>
+       <form id="contact-form" class="space-y-4">
+        <div><label for="cf-name" class="block text-sm font-medium mb-1">Nombre</label><input id="cf-name" type="text" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-accent/30 outline-none" placeholder="Tu nombre">
+        </div>
+        <div><label for="cf-phone" class="block text-sm font-medium mb-1">Teléfono</label><input id="cf-phone" type="tel" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-accent/30 outline-none" placeholder="+504 ">
+        </div>
+        <div><label for="cf-msg" class="block text-sm font-medium mb-1">Mensaje</label><textarea id="cf-msg" rows="4" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-accent/30 outline-none resize-none" placeholder="¿En qué podemos ayudarte?"></textarea>
+        </div><button type="submit" class="w-full bg-navy hover:bg-steel text-white font-bold py-3 rounded-xl transition btn-pulse">Enviar Mensaje</button>
+       </form>
+       <p id="form-success" class="hidden mt-4 text-green-600 font-medium text-center">✓ Mensaje enviado. Te contactaremos pronto.</p>
+      </div>
+      <div class="space-y-6">
+       <div class="flex gap-3 items-center"><i data-lucide="phone" class="w-5 h-5 text-accent"></i><span class="text-sm">+504 8990-0088</span>
+       </div>
+       <div class="flex gap-3 items-center"><i data-lucide="map-pin" class="w-5 h-5 text-accent"></i><span class="text-sm">Honduras</span>
+       </div>
+       <div class="flex gap-3 items-center"><i data-lucide="clock" class="w-5 h-5 text-accent"></i><span class="text-sm">Lun - Sáb: 8:00 AM - 6:00 PM</span>
+       </div><a href="https://wa.me/50489900088?text=Hola%20%F0%9F%91%8B%20Quisiera%20informaci%C3%B3n%20sobre%20sus%20servicios%20de%20importaci%C3%B3n" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-xl transition btn-pulse mt-4">
+        <svg class="w-5 h-5" fill="currentColor" viewbox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" /><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.6-1.47A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.156 0-4.154-.694-5.784-1.87l-.413-.248-2.727.871.887-2.64-.272-.43A9.71 9.71 0 012.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75z" />
+        </svg> WhatsApp Directo </a>
+      </div>
+     </div>
+    </div>
+   </section><!-- Footer -->
+   <footer class="bg-navy text-white py-10 px-4">
+    <div class="max-w-6xl mx-auto text-center">
+     <p class="font-bold text-lg mb-2" id="footer-brand">AutoImport HN</p>
+     <p class="text-sm text-gray-400">Vehículos importados desde EE.UU. • Honduras</p>
+     <p class="text-xs text-gray-500 mt-4">© 2024 Todos los derechos reservados. Precios referenciales sujetos a cambios.</p>
+    </div>
+   </footer>
+  </div>
+  <script>
+// Vehicle catalog data
+const vehiculos = [
+  { id: 1, marca: "Ford", modelo: "Explorer", year: 2020, motor: "3.5", precio: 550000, foto: "https://lh3.googleusercontent.com/d/1PgawQTn1LDwcdolzI8YwNcUeiS7_zfNl" },
+  { id: 2, marca: "Toyota", modelo: "Tacoma", year: 2022, motor: "3.0", precio: 480000, foto: "https://lh3.googleusercontent.com/d/16i7FBL-1e_BRb4iOIn33oxFhfBrZsAyl" },
+  { id: 3, marca: "Honda", modelo: "Civic", year: 2023, motor: "2.0", precio: 310000, foto: "https://lh3.googleusercontent.com/d/1uxbEQBHbAJqkmK_7cJ1zwr6pvyfY3f8X" },
+  { id: 4, marca: "Toyota", modelo: "22R", year: 1980, motor: "1.4", precio: 825000, foto: "https://lh3.googleusercontent.com/d/1Kl2xiRSzqhQsUbAMh7tj0eTqGf0h2Lj4" }
+];
+
+function formatPrice(n) { return "L " + n.toLocaleString("es-HN"); }
+
+// Cart logic with localStorage
+let cart = JSON.parse(localStorage.getItem("cart_autoimport") || "[]");
+
+function saveCart() { localStorage.setItem("cart_autoimport", JSON.stringify(cart)); updateCartUI(); }
+
+function addToCart(id) {
+  const exists = cart.find(i => i.id === id);
+  if (!exists) { cart.push({ id, qty: 1 }); }
+  saveCart();
+}
+
+function removeFromCart(id) { cart = cart.filter(i => i.id !== id); saveCart(); }
+
+function updateCartUI() {
+  const count = cart.length;
+  const countEl = document.getElementById("cart-count");
+  const countMob = document.getElementById("cart-count-mobile");
+  if (count > 0) { countEl.textContent = count; countEl.classList.remove("hidden"); } else { countEl.classList.add("hidden"); }
+  countMob.textContent = count;
+
+  const emptyEl = document.getElementById("cart-empty");
+  const itemsEl = document.getElementById("cart-items");
+  const footerEl = document.getElementById("cart-footer");
+
+  if (count === 0) { emptyEl.classList.remove("hidden"); itemsEl.classList.add("hidden"); footerEl.classList.add("hidden"); return; }
+  emptyEl.classList.add("hidden"); itemsEl.classList.remove("hidden"); footerEl.classList.remove("hidden");
+
+  let total = 0;
+  itemsEl.innerHTML = cart.map(ci => {
+    const v = vehiculos.find(x => x.id === ci.id);
+    if (!v) return "";
+    total += v.precio;
+    return `<div class="flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm border">
+      <img src="${v.foto}" alt="${v.marca} ${v.modelo}" class="w-20 h-16 object-cover rounded-lg" loading="lazy" onerror="this.style.background='#e5e7eb';this.alt='Imagen no disponible';">
+      <div class="flex-1">
+        <p class="font-bold">${v.marca} ${v.modelo} ${v.year}</p>
+        <p class="text-sm text-gray-500">Motor: ${v.motor}L</p>
+        <p class="text-accent font-bold">${formatPrice(v.precio)}</p>
+      </div>
+      <button onclick="removeFromCart(${v.id})" class="p-2 hover:bg-red-50 rounded-lg transition text-red-500"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+    </div>`;
+  }).join("");
+  document.getElementById("cart-total").textContent = formatPrice(total);
+  lucide.createIcons();
+}
+
+// Checkout WhatsApp
+document.getElementById("checkout-btn").addEventListener("click", function() {
+  if (cart.length === 0) return;
+  let total = 0;
+  let items = cart.map(ci => {
+    const v = vehiculos.find(x => x.id === ci.id);
+    if (!v) return "";
+    total += v.precio;
+    return `• ${v.marca} ${v.modelo} ${v.year} | Motor: ${v.motor}L | Precio: ${formatPrice(v.precio)} | ID: ${v.id}`;
+  }).join("\n");
+
+  const msg = `Hola 😊 Me interesa cotizar y conocer la disponibilidad de estos vehículos que vi en su sitio web:\n\n${items}\n\n💰 Total referencial: ${formatPrice(total)}\n\n¿Me confirman disponibilidad y próximos pasos? Quedo atento para coordinar llamada o visita. ¡Gracias!`;
+  const url = "https://wa.me/50489900088?text=" + encodeURIComponent(msg);
+  window.open(url, "_blank");
+});
+
+// Render catalog
+function renderCatalog(list) {
+  const grid = document.getElementById("catalog-grid");
+  const noRes = document.getElementById("no-results");
+  if (list.length === 0) { grid.innerHTML = ""; noRes.classList.remove("hidden"); return; }
+  noRes.classList.add("hidden");
+  grid.innerHTML = list.map((v, i) => `
+    <div class="bg-white rounded-2xl overflow-hidden shadow-sm border card-hover slide-up cursor-pointer" style="animation-delay:${i*0.1}s" onclick="openModal(${v.id})">
+      <div class="relative">
+        <img src="${v.foto}" alt="${v.marca} ${v.modelo}" class="w-full h-44 object-cover" loading="lazy" onerror="this.style.background='#e5e7eb';this.alt='Imagen no disponible';">
+        <span class="absolute top-3 left-3 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-lg badge">Disponible</span>
+        <span class="absolute top-3 right-3 bg-navy/80 text-white text-xs font-bold px-2 py-1 rounded-lg">Importado</span>
+      </div>
+      <div class="p-5">
+        <h3 class="font-bold text-lg">${v.marca} ${v.modelo}</h3>
+        <p class="text-sm text-gray-500">Año: ${v.year} • Motor: ${v.motor}L</p>
+        <p class="text-xl font-800 text-accent mt-2">${formatPrice(v.precio)}</p>
+        <button onclick="event.stopPropagation(); addToCart(${v.id})" class="mt-4 w-full bg-navy hover:bg-steel text-white font-bold py-3 rounded-xl transition btn-pulse flex items-center justify-center gap-2">
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i> Agregar al Carrito
+        </button>
+      </div>
+    </div>
+  `).join("");
+  lucide.createIcons();
+}
+
+// Modal functions
+function openModal(id) {
+  const v = vehiculos.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById("modal-marca").textContent = v.marca;
+  document.getElementById("modal-modelo").textContent = v.modelo;
+  document.getElementById("modal-year").textContent = v.year;
+  document.getElementById("modal-motor").textContent = v.motor + "L";
+  document.getElementById("modal-precio").textContent = formatPrice(v.precio);
+  document.getElementById("modal-foto").src = v.foto;
+  document.getElementById("vehicle-modal").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+
+  document.getElementById("modal-add-cart").onclick = () => {
+    addToCart(v.id);
+    closeModal();
+    alert("✓ Vehículo agregado al carrito");
+  };
+
+  document.getElementById("modal-whatsapp").onclick = () => {
+    const msg = `Hola 😊 Me interesa conocer más detalles sobre el ${v.marca} ${v.modelo} ${v.year} (Motor: ${v.motor}L) que vi en su sitio. Precio: ${formatPrice(v.precio)}. ¿Me pueden confirmar disponibilidad y próximos pasos? ¡Gracias!`;
+    window.open("https://wa.me/50489900088?text=" + encodeURIComponent(msg), "_blank");
+  };
+
+  lucide.createIcons();
+}
+
+function closeModal() {
+  document.getElementById("vehicle-modal").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+document.getElementById("vehicle-modal").addEventListener("click", (e) => {
+  if (e.target.id === "vehicle-modal") closeModal();
+});
+
+// Filters
+function applyFilters() {
+  let list = [...vehiculos];
+  const marca = document.getElementById("filter-marca").value;
+  const year = document.getElementById("filter-year").value;
+  const price = document.getElementById("filter-price").value;
+  if (marca) list = list.filter(v => v.marca === marca);
+  if (year) list = list.filter(v => v.year === parseInt(year));
+  if (price) { const [min, max] = price.split("-").map(Number); list = list.filter(v => v.precio >= min && v.precio <= max); }
+  renderCatalog(list);
+}
+
+document.getElementById("filter-marca").addEventListener("change", applyFilters);
+document.getElementById("filter-year").addEventListener("change", applyFilters);
+document.getElementById("filter-price").addEventListener("change", applyFilters);
+document.getElementById("filter-reset").addEventListener("click", () => {
+  document.getElementById("filter-marca").value = "";
+  document.getElementById("filter-year").value = "";
+  document.getElementById("filter-price").value = "";
+  renderCatalog(vehiculos);
+});
+
+// Contact form
+document.getElementById("contact-form").addEventListener("submit", function(e) {
+  e.preventDefault();
+  this.reset();
+  document.getElementById("form-success").classList.remove("hidden");
+  setTimeout(() => document.getElementById("form-success").classList.add("hidden"), 4000);
+});
+
+// Mobile menu
+document.getElementById("mobile-toggle").addEventListener("click", () => {
+  document.getElementById("mobile-menu").classList.toggle("hidden");
+});
+document.querySelectorAll("#mobile-menu a").forEach(a => a.addEventListener("click", () => document.getElementById("mobile-menu").classList.add("hidden")));
+
+// Init
+renderCatalog(vehiculos);
+updateCartUI();
+lucide.createIcons();
+
+// Element SDK
+const defaultConfig = {
+  hero_title: "Vehículos Importados desde EE.UU.",
+  hero_subtitle: "Calidad, confianza y los mejores precios en Honduras",
+  company_name: "AutoImport HN",
+  background_color: "#0f172a",
+  surface_color: "#f8fafc",
+  text_color: "#0f172a",
+  accent_color: "#f59e0b",
+  action_color: "#16a34a",
+  font_family: "DM Sans",
+  font_size: 16
+};
+
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => {
+    document.getElementById("hero-title").textContent = config.hero_title || defaultConfig.hero_title;
+    document.getElementById("hero-subtitle").textContent = config.hero_subtitle || defaultConfig.hero_subtitle;
+    document.getElementById("nav-brand").textContent = config.company_name || defaultConfig.company_name;
+    document.getElementById("footer-brand").textContent = config.company_name || defaultConfig.company_name;
+    const font = config.font_family || defaultConfig.font_family;
+    document.body.style.fontFamily = `${font}, sans-serif`;
+    const size = config.font_size || defaultConfig.font_size;
+    document.body.style.fontSize = size + "px";
+  },
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+      { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+      { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+      { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+      { get: () => config.action_color || defaultConfig.action_color, set: (v) => { config.action_color = v; window.elementSdk.setConfig({ action_color: v }); } }
+    ],
+    borderables: [],
+    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ["hero_title", config.hero_title || defaultConfig.hero_title],
+    ["hero_subtitle", config.hero_subtitle || defaultConfig.hero_subtitle],
+    ["company_name", config.company_name || defaultConfig.company_name]
+  ])
+});
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9fce036f533f2af6',t:'MTc3ODk3MjU4Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
