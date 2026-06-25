@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de RRHH</title>
+  <style>
+    :root{
+      --bg:#f5f6f8;
+      --dark:#000000;
+      --gold:#f0d848;
+      --text:#2f2f2f;
+      --muted:#6c757d;
+      --line:#d9dde4;
+      --panel:#ffffff;
+      --accent:#1b75bc;
+      --soft:#eef2f7;
+      --shadow:0 14px 28px rgba(0,0,0,.18);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Segoe UI, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .hero{
+      background:#000;
+      height:92px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:sticky;
+      top:0;
+      z-index:50;
+      box-shadow:0 6px 18px rgba(0,0,0,.25);
+    }
+
+    .hero h1{
+      margin:0;
+      color:var(--gold);
+      font-size:clamp(2.1rem, 5vw, 4rem);
+      font-weight:300;
+      letter-spacing:1px;
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      min-height:calc(100vh - 92px);
+    }
+
+    aside{
+      background:#fff;
+      border-right:1px solid var(--line);
+      padding:18px 14px;
+      overflow:auto;
+      max-height:calc(100vh - 92px);
+    }
+
+    .side-title{
+      font-size:.78rem;
+      text-transform:uppercase;
+      color:#333;
+      padding-bottom:9px;
+      border-bottom:2px solid #6ba9d8;
+      margin-bottom:8px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .dept{
+      margin-bottom:4px;
+      border-radius:10px;
+      overflow:hidden;
+    }
+
+    .dept-head{
+      width:100%;
+      border:0;
+      background:#f2f2f2;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:700;
+      color:#4d4d4d;
+      text-align:left;
+      font-size:.96rem;
+      transition:.2s;
+    }
+
+    .dept-head:hover{background:#e8eef5}
+    .toggle{
+      width:18px;height:18px;
+      border:1px solid #b8bec7;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:.86rem;
+      background:#fff;
+      flex:0 0 auto;
+    }
+
+    .people{display:none;padding:4px 0 5px 34px;background:#fff}
+    .dept.open .people{display:block}
+
+    .person-btn{
+      display:block;
+      width:100%;
+      border:0;
+      background:transparent;
+      text-align:left;
+      padding:6px 8px;
+      cursor:pointer;
+      color:#5b5f66;
+      font-size:.94rem;
+      border-left:3px solid transparent;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .person-btn:hover{background:#f3f7fb;color:#222}
+    .person-btn.active{
+      background:#e9e9e9;
+      border-left-color:#000;
+      color:#1d1d1d;
+    }
+
+    main{
+      padding:16px 22px 28px;
+      overflow:auto;
+    }
+
+    .search-panel{
+      background:#fff;
+      border:1px solid #e0e0e0;
+      padding:0 0 18px;
+      margin-bottom:18px;
+      min-height:120px;
+    }
+
+    .search-label{
+      font-weight:600;
+      padding:0 0 6px 0;
+      font-size:.92rem;
+      color:#2c2c2c;
+    }
+
+    .search-wrap{
+      max-width:860px;
+      padding:0 0 0 4px;
+      margin:0 0 0 0;
+    }
+
+    .input-box{
+      position:relative;
+      border:1px solid #9da3aa;
+      background:#fff;
+      height:42px;
+      display:flex;
+      align-items:center;
+    }
+
+    .input-box input{
+      width:100%;
+      height:100%;
+      border:0;
+      outline:0;
+      padding:0 44px 0 12px;
+      font-size:.95rem;
+    }
+
+    .input-box span{
+      position:absolute;
+      right:14px;
+      color:#777;
+    }
+
+    .content{
+      display:grid;
+      grid-template-columns:300px minmax(360px, 560px);
+      gap:40px;
+      align-items:start;
+    }
+
+    .photo-card{
+      width:300px;
+      height:360px;
+      background:#ddd;
+      border:1px solid #d0d0d0;
+      overflow:hidden;
+      box-shadow:0 8px 18px rgba(0,0,0,.10);
+    }
+
+    .photo-card img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .avatar-fallback{
+      width:100%;height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,#1d2733,#6d7b8a);
+      color:#fff;
+      font-size:4rem;
+      font-weight:300;
+    }
+
+    .detail-card{
+      background:#fff;
+      min-height:360px;
+      border:1px solid #555;
+      box-shadow:var(--shadow);
+      padding:18px 6px;
+    }
+
+    .field{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      margin-bottom:28px;
+      flex-wrap:wrap;
+    }
+
+    .field .label{
+      font-size:clamp(1.7rem, 3vw, 2.1rem);
+      line-height:1;
+      font-weight:300;
+    }
+
+    .field .value{
+      color:#25313d;
+      font-size:.82rem;
+      text-decoration:underline;
+      text-underline-offset:3px;
+      overflow-wrap:anywhere;
+      text-transform:none;
+    }
+
+    .empty, .loading, .error{
+      padding:30px;
+      background:#fff;
+      border:1px dashed #c9cdd3;
+      color:#626b74;
+      border-radius:14px;
+      margin-top:18px;
+    }
+
+    .status{
+      color:#69707a;
+      font-size:.85rem;
+      margin-top:8px;
+    }
+
+    @media (max-width:900px){
+      .app{grid-template-columns:1fr}
+      aside{max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+      .content{grid-template-columns:1fr;gap:20px}
+      .photo-card{width:100%;max-width:360px;height:420px}
+      .detail-card{max-width:100%}
+    }
+
+    @media (max-width:520px){
+      .hero{height:76px}
+      .app{min-height:calc(100vh - 76px)}
+      main{padding:14px}
+      .photo-card{height:340px}
+      .field{margin-bottom:22px}
+    }
+  </style>
+</head>
+<body>
+  <header class="hero"><h1>Portal de RRHH</h1></header>
+
+  <div class="app">
+    <aside>
+      <div class="side-title">GERENCIA <span>⌄</span></div>
+      <div id="departmentList" class="loading">Cargando datos...</div>
+    </aside>
+
+    <main>
+      <section class="search-panel">
+        <div class="search-wrap">
+          <div class="search-label">NOMBRE</div>
+          <div class="input-box">
+            <input id="searchInput" type="search" placeholder="Search" autocomplete="off" />
+            <span>⌕</span>
+          </div>
+          <div id="status" class="status"></div>
+        </div>
+      </section>
+
+      <section id="profileSection" class="content"></section>
+    </main>
+  </div>
+
+  <script>
+    // ============================================================
+    // 1. CONEXIÓN CON GOOGLE SHEETS PUBLICADO COMO CSV
+    // ============================================================
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRmLGeTMEbI6hBY9zGTGzOFpp6mZl3h33fp7GBuOfdZSL6_GdrB78GMQMewjfTUEnEM2e6O_IcUYv2D/pub?output=csv";
+
+    let employees = [];
+    let filteredEmployees = [];
+    let selectedEmployee = null;
+
+    const departmentList = document.getElementById("departmentList");
+    const profileSection = document.getElementById("profileSection");
+    const searchInput = document.getElementById("searchInput");
+    const status = document.getElementById("status");
+
+    // ============================================================
+    // 2. UTILIDADES PARA LEER CSV Y NORMALIZAR COLUMNAS
+    // ============================================================
+    function parseCSV(text){
+      const rows = [];
+      let row = [], cell = "", inQuotes = false;
+      for(let i=0;i<text.length;i++){
+        const char = text[i], next = text[i+1];
+        if(char === '"' && inQuotes && next === '"'){
+          cell += '"'; i++;
+        }else if(char === '"'){
+          inQuotes = !inQuotes;
+        }else if(char === ',' && !inQuotes){
+          row.push(cell.trim()); cell = "";
+        }else if((char === '\n' || char === '\r') && !inQuotes){
+          if(cell || row.length){
+            row.push(cell.trim());
+            rows.push(row);
+            row = []; cell = "";
+          }
+          if(char === '\r' && next === '\n') i++;
+        }else{
+          cell += char;
+        }
+      }
+      if(cell || row.length){ row.push(cell.trim()); rows.push(row); }
+      return rows;
+    }
+
+    function normalizeKey(key){
+      return String(key || "")
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+    }
+
+    function pick(row, options){
+      const normalized = Object.fromEntries(Object.keys(row).map(k => [normalizeKey(k), row[k]]));
+      for(const option of options){
+        const value = normalized[normalizeKey(option)];
+        if(value !== undefined && String(value).trim() !== "") return String(value).trim();
+      }
+      return "";
+    }
+
+    function mapRows(rows){
+      const headers = rows[0] || [];
+      return rows.slice(1).map(cols => {
+        const raw = {};
+        headers.forEach((h, i) => raw[h] = cols[i] || "");
+
+        return {
+          raw,
+          nombre: pick(raw, ["Nombre", "NOMBRE", "Empleado", "Colaborador", "Persona", "Name"]),
+          gerencia: pick(raw, ["Gerencia", "GERENCIA", "Area", "Área", "Departamento", "Unidad"]),
+          puesto: pick(raw, ["Puesto", "puesto", "Cargo", "Posicion", "Posición", "Job"]),
+          correo: pick(raw, ["Correo", "Email", "E-mail", "Mail", "Correo electronico", "Correo electrónico"]),
+          foto: pick(raw, ["Foto", "Imagen", "URL Foto", "URL Imagen", "Photo", "Image"])
+        };
+      }).filter(e => e.nombre || e.gerencia || e.puesto || e.correo);
+    }
+
+    // ============================================================
+    // 3. CARGA Y PROCESAMIENTO DE DATOS CON FETCH()
+    // ============================================================
+    async function loadData(){
+      try{
+        status.textContent = "Conectando con Google Sheets...";
+        const response = await fetch(SHEET_CSV_URL + "&cacheBust=" + Date.now());
+        if(!response.ok) throw new Error("No se pudo leer el Google Sheet publicado.");
+
+        const csvText = await response.text();
+        const rows = parseCSV(csvText);
+        employees = mapRows(rows);
+        filteredEmployees = [...employees];
+
+        if(!employees.length){
+          departmentList.innerHTML = `<div class="empty">No se encontraron registros válidos en el Google Sheet.</div>`;
+          profileSection.innerHTML = "";
+          status.textContent = "";
+          return;
+        }
+
+        selectedEmployee = employees[0];
+        renderDepartments();
+        renderProfile(selectedEmployee);
+        status.textContent = `${employees.length} registros cargados desde Google Sheets.`;
+      }catch(error){
+        console.error(error);
+        departmentList.innerHTML = `<div class="error">Error al cargar el Google Sheet. Verifica que esté publicado en la web como CSV.</div>`;
+        profileSection.innerHTML = "";
+        status.textContent = "";
+      }
+    }
+
+    // ============================================================
+    // 4. RENDERIZADO DINÁMICO DE GERENCIAS, PERSONAS Y PERFIL
+    // ============================================================
+    function groupByDepartment(data){
+      return data.reduce((acc, emp) => {
+        const key = emp.gerencia || "SIN GERENCIA";
+        if(!acc[key]) acc[key] = [];
+        acc[key].push(emp);
+        return acc;
+      }, {});
+    }
+
+    function renderDepartments(){
+      const groups = groupByDepartment(filteredEmployees);
+      departmentList.innerHTML = "";
+
+      Object.entries(groups).forEach(([dept, people], index) => {
+        const isOpen = selectedEmployee && selectedEmployee.gerencia === dept;
+        const deptEl = document.createElement("div");
+        deptEl.className = "dept" + (isOpen || index === 0 ? " open" : "");
+
+        deptEl.innerHTML = `
+          <button class="dept-head" type="button">
+            <span class="toggle">${isOpen || index === 0 ? "−" : "+"}</span>
+            <span>${dept}</span>
+          </button>
+          <div class="people"></div>
+        `;
+
+        const peopleBox = deptEl.querySelector(".people");
+        people.forEach(emp => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "person-btn" + (emp === selectedEmployee ? " active" : "");
+          btn.textContent = emp.nombre || "Sin nombre";
+          btn.addEventListener("click", () => {
+            selectedEmployee = emp;
+            renderDepartments();
+            renderProfile(emp);
+          });
+          peopleBox.appendChild(btn);
+        });
+
+        deptEl.querySelector(".dept-head").addEventListener("click", () => {
+          deptEl.classList.toggle("open");
+          deptEl.querySelector(".toggle").textContent = deptEl.classList.contains("open") ? "−" : "+";
+        });
+
+        departmentList.appendChild(deptEl);
+      });
+    }
+
+    function initials(name){
+      return String(name || "?").split(" ").filter(Boolean).slice(0,2).map(w => w[0]).join("").toUpperCase();
+    }
+
+    function renderProfile(emp){
+      const photoHTML = emp.foto
+        ? `<img src="${emp.foto}" alt="Foto de ${emp.nombre}" onerror="this.parentElement.innerHTML='<div class=&quot;avatar-fallback&quot;>${initials(emp.nombre)}</div>'">`
+        : `<div class="avatar-fallback">${initials(emp.nombre)}</div>`;
+
+      profileSection.innerHTML = `
+        <div class="photo-card">${photoHTML}</div>
+        <div class="detail-card">
+          <div class="field"><span class="label">Nombre:</span><span class="value">${emp.nombre || "No disponible"}</span></div>
+          <div class="field"><span class="label">Gerencia:</span><span class="value">${emp.gerencia || "No disponible"}</span></div>
+          <div class="field"><span class="label">puesto:</span><span class="value">${emp.puesto || "No disponible"}</span></div>
+          <div class="field"><span class="label">correo:</span><span class="value">${emp.correo || "No disponible"}</span></div>
+        </div>
+      `;
+    }
+
+    // ============================================================
+    // 5. BUSCADOR DINÁMICO POR NOMBRE, GERENCIA, PUESTO O CORREO
+    // ============================================================
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      filteredEmployees = employees.filter(emp =>
+        [emp.nombre, emp.gerencia, emp.puesto, emp.correo]
+          .join(" ")
+          .toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+          .includes(q)
+      );
+
+      selectedEmployee = filteredEmployees[0] || null;
+      renderDepartments();
+      if(selectedEmployee) renderProfile(selectedEmployee);
+      else profileSection.innerHTML = `<div class="empty">No se encontraron colaboradores con ese criterio.</div>`;
+      status.textContent = `${filteredEmployees.length} registro(s) encontrados.`;
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
